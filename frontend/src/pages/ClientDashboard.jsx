@@ -110,16 +110,32 @@ function ClientDashboard() {
         navigate('/');
     };
 
+    // Configurație statusuri
     const statusConfig = {
         'asteapta': { text: '⏳ În așteptare', color: '#f59e0b', bg: '#fef3c7' },
         'asignata': { text: '🔧 Montator asignat', color: '#3b82f6', bg: '#dbeafe' },
         'finalizata': { text: '✅ Finalizată', color: '#10b981', bg: '#d1fae5' }
     };
 
+    // Configurație confirmare montator
+    const confirmareConfig = {
+        'neconfirmat': { text: '⏳ Așteaptă confirmarea montatorului', color: '#f59e0b', bg: '#fef3c7', icon: '⏳' },
+        'confirmat': { text: '✅ Montatorul a confirmat comanda', color: '#10b981', bg: '#d1fae5', icon: '✅' },
+        'respins': { text: '❌ Comandă respinsă de montator', color: '#dc2626', bg: '#fee2e2', icon: '❌' }
+    };
+
     // Obține data minimă (mâine)
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const minDate = tomorrow.toISOString().split('T')[0];
+
+    // Verifică dacă există confirmare
+    const getConfirmareStatus = (comanda) => {
+        if (comanda.confirmat_montator) {
+            return confirmareConfig[comanda.confirmat_montator] || null;
+        }
+        return null;
+    };
 
     return (
         <div>
@@ -324,86 +340,201 @@ function ClientDashboard() {
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {comenzi.map((c, index) => (
-                            <div key={c.id} className="card" style={{ animation: `fadeInUp 0.5s ease ${index * 0.1}s backwards` }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-                      <span style={{
-                          background: statusConfig[c.status].bg,
-                          color: statusConfig[c.status].color,
-                          padding: '0.25rem 0.75rem',
-                          borderRadius: '2rem',
-                          fontSize: '0.75rem',
-                          fontWeight: '600'
-                      }}>
-                        {statusConfig[c.status].text}
-                      </span>
-                                            <span style={{ color: '#9ca3af', fontSize: '0.75rem' }}>
-                        📅 {new Date(c.data_creare).toLocaleDateString('ro-RO')}
-                      </span>
-                                            {c.data_preferata && (
-                                                <span style={{ color: '#10b981', fontSize: '0.75rem' }}>
-                          🗓️ Programat: {new Date(c.data_preferata).toLocaleDateString('ro-RO')} {c.ora_preferata}
-                        </span>
+                        {comenzi.map((c, index) => {
+                            const confirmStatus = getConfirmareStatus(c);
+                            return (
+                                <div key={c.id} className="card" style={{ animation: `fadeInUp 0.5s ease ${index * 0.1}s backwards` }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                                        <div style={{ flex: 1 }}>
+                                            {/* Badges status */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                                                <span style={{
+                                                    background: statusConfig[c.status].bg,
+                                                    color: statusConfig[c.status].color,
+                                                    padding: '0.25rem 0.75rem',
+                                                    borderRadius: '2rem',
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: '600'
+                                                }}>
+                                                    {statusConfig[c.status].text}
+                                                </span>
+
+                                                {/* Badge confirmare montator */}
+                                                {c.status === 'asignata' && confirmStatus && (
+                                                    <span style={{
+                                                        background: confirmStatus.bg,
+                                                        color: confirmStatus.color,
+                                                        padding: '0.25rem 0.75rem',
+                                                        borderRadius: '2rem',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: '600'
+                                                    }}>
+                                                        {confirmStatus.icon} {confirmStatus.text}
+                                                    </span>
+                                                )}
+
+                                                {/* Badge respins */}
+                                                {confirmStatus && c.confirmat_montator === 'respins' && (
+                                                    <span style={{
+                                                        background: confirmStatus.bg,
+                                                        color: confirmStatus.color,
+                                                        padding: '0.25rem 0.75rem',
+                                                        borderRadius: '2rem',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: '600'
+                                                    }}>
+                                                        {confirmStatus.icon} {confirmStatus.text}
+                                                    </span>
+                                                )}
+
+                                                <span style={{ color: '#9ca3af', fontSize: '0.75rem' }}>
+                                                    📅 {new Date(c.data_creare).toLocaleDateString('ro-RO')}
+                                                </span>
+
+                                                {c.data_preferata && (
+                                                    <span style={{ color: '#10b981', fontSize: '0.75rem' }}>
+                                                        🗓️ Programat: {new Date(c.data_preferata).toLocaleDateString('ro-RO')} {c.ora_preferata}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Motiv respingere */}
+                                            {c.confirmat_montator === 'respins' && c.motiv_respingere && (
+                                                <div style={{
+                                                    background: '#fee2e2',
+                                                    padding: '0.5rem 0.75rem',
+                                                    borderRadius: '0.5rem',
+                                                    marginBottom: '0.75rem',
+                                                    borderLeft: '3px solid #dc2626'
+                                                }}>
+                                                    <p style={{ fontSize: '0.75rem', color: '#991b1b', margin: 0 }}>
+                                                        <strong>Motiv respingere:</strong> {c.motiv_respingere}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {/* Comandă respinsă - buton reasignare */}
+                                            {c.confirmat_montator === 'respins' && c.status === 'asteapta' && (
+                                                <div style={{
+                                                    background: '#fef3c7',
+                                                    padding: '0.5rem 0.75rem',
+                                                    borderRadius: '0.5rem',
+                                                    marginBottom: '0.75rem',
+                                                    borderLeft: '3px solid #f59e0b'
+                                                }}>
+                                                    <p style={{ fontSize: '0.75rem', color: '#92400e', margin: 0 }}>
+                                                        ⚠️ Comanda a fost respinsă. Te rugăm să alegi un alt montator.
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            <p style={{ marginBottom: '0.5rem' }}>
+                                                <strong>📍 Locație:</strong> {c.locatie}, {c.oras}
+                                            </p>
+
+                                            {c.bloc && (
+                                                <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
+                                                    🏢 Bloc: {c.bloc} | 📞 Interfon: {c.interfon || '-'} | 📶 Etaj: {c.etaj || '-'}
+                                                </p>
+                                            )}
+
+                                            {c.suprafata && (
+                                                <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
+                                                    ❄️ Suprafață: {c.suprafata} m² | BTU: {c.btu || '-'}
+                                                </p>
+                                            )}
+
+                                            {c.instructiuni && (
+                                                <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#6b7280', fontStyle: 'italic' }}>
+                                                    📝 {c.instructiuni}
+                                                </p>
+                                            )}
+
+                                            {/* Afișează numele montatorului asignat */}
+                                            {c.montator_id && c.status !== 'asteapta' && (
+                                                <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#3b82f6' }}>
+                                                    🔧 Montator asignat: {c.montator_nume ? `${c.montator_nume} ${c.montator_prenume}` : `ID: ${c.montator_id}`}
+                                                </p>
                                             )}
                                         </div>
 
-                                        <p style={{ marginBottom: '0.5rem' }}>
-                                            <strong>📍 Locație:</strong> {c.locatie}, {c.oras}
-                                        </p>
-
-                                        {c.bloc && (
-                                            <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                                                🏢 Bloc: {c.bloc} | 📞 Interfon: {c.interfon || '-'} | 📶 Etaj: {c.etaj || '-'}
-                                            </p>
+                                        {/* Butoane acțiune */}
+                                        {c.status === 'asteapta' && c.confirmat_montator !== 'respins' && (
+                                            <div style={{ minWidth: '200px' }}>
+                                                <select
+                                                    onChange={(e) => handleAsigneaza(c.id, e.target.value)}
+                                                    defaultValue=""
+                                                    className="input-field"
+                                                    style={{ fontSize: '0.875rem' }}
+                                                >
+                                                    <option value="" disabled>Alege un montator</option>
+                                                    {montatori.map(m => (
+                                                        <option key={m.id} value={m.id}>
+                                                            {m.nume} {m.prenume} - {m.telefon}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                         )}
 
-                                        {c.suprafata && (
-                                            <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                                                ❄️ Suprafață: {c.suprafata} m² | BTU: {c.btu || '-'}
-                                            </p>
+                                        {/* Reasignare pentru comanda respinsă */}
+                                        {c.status === 'asteapta' && c.confirmat_montator === 'respins' && (
+                                            <div style={{ minWidth: '200px' }}>
+                                                <select
+                                                    onChange={(e) => handleAsigneaza(c.id, e.target.value)}
+                                                    defaultValue=""
+                                                    className="input-field"
+                                                    style={{ fontSize: '0.875rem', borderColor: '#f59e0b' }}
+                                                >
+                                                    <option value="" disabled>Alege alt montator</option>
+                                                    {montatori.map(m => (
+                                                        <option key={m.id} value={m.id}>
+                                                            {m.nume} {m.prenume} - {m.telefon}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                         )}
 
-                                        {c.instructiuni && (
-                                            <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#6b7280', fontStyle: 'italic' }}>
-                                                📝 {c.instructiuni}
-                                            </p>
+                                        {c.status === 'asignata' && c.confirmat_montator === 'confirmat' && (
+                                            <div style={{
+                                                background: '#d1fae5',
+                                                padding: '0.5rem 1rem',
+                                                borderRadius: '0.75rem',
+                                                fontSize: '0.875rem',
+                                                color: '#065f46'
+                                            }}>
+                                                ✅ Montatorul a confirmat și te va contacta
+                                            </div>
+                                        )}
+
+                                        {c.status === 'asignata' && c.confirmat_montator === 'neconfirmat' && (
+                                            <div style={{
+                                                background: '#fef3c7',
+                                                padding: '0.5rem 1rem',
+                                                borderRadius: '0.75rem',
+                                                fontSize: '0.875rem',
+                                                color: '#92400e'
+                                            }}>
+                                                ⏳ Montatorul a fost notificat. Așteaptă confirmarea lui.
+                                            </div>
+                                        )}
+
+                                        {c.status === 'finalizata' && (
+                                            <div style={{
+                                                background: '#d1fae5',
+                                                padding: '0.5rem 1rem',
+                                                borderRadius: '0.75rem',
+                                                fontSize: '0.875rem',
+                                                color: '#065f46'
+                                            }}>
+                                                ✅ Comandă finalizată cu succes
+                                            </div>
                                         )}
                                     </div>
-
-                                    {c.status === 'asteapta' && (
-                                        <div style={{ minWidth: '200px' }}>
-                                            <select
-                                                onChange={(e) => handleAsigneaza(c.id, e.target.value)}
-                                                defaultValue=""
-                                                className="input-field"
-                                                style={{ fontSize: '0.875rem' }}
-                                            >
-                                                <option value="" disabled>Alege un montator</option>
-                                                {montatori.map(m => (
-                                                    <option key={m.id} value={m.id}>
-                                                        {m.nume} {m.prenume} - {m.telefon}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    )}
-
-                                    {c.status === 'asignata' && (
-                                        <div style={{
-                                            background: '#dbeafe',
-                                            padding: '0.5rem 1rem',
-                                            borderRadius: '0.75rem',
-                                            fontSize: '0.875rem',
-                                            color: '#1e40af'
-                                        }}>
-                                            🔧 Un montator a fost asignat și te va contacta
-                                        </div>
-                                    )}
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>

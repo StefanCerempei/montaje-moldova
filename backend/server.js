@@ -129,23 +129,37 @@ app.get('/api/comenzile-mele/:montatorId', (req, res) => {
 });
 
 // ========== MONTATOR - FINALIZARE COMANDA ==========
-app.post('/api/finalizeaza-comanda', (req, res) => {
-    const { comanda_id, montator_id, semnatura, suma } = req.body;
+// ========== MONTATOR - CONFIRMARE COMANDA ==========
+app.post('/api/confirma-comanda', (req, res) => {
+    const { comanda_id, montator_id, confirmat, motiv } = req.body;
 
-    db.beginTransaction((err) => {
-        if (err) return res.json({ error: err });
+    if (confirmat === 'confirmat') {
+        db.query('UPDATE comenzi SET confirmat_montator = ?, data_confirmare = NOW() WHERE id = ? AND montator_id = ?',
+            ['confirmat', comanda_id, montator_id], (err, result) => {
+                if (err) return res.json({ error: err.message });
+                res.json({ success: true, message: 'Comanda confirmată!' });
+            });
+    } else if (confirmat === 'respins') {
+        db.query('UPDATE comenzi SET confirmat_montator = ?, motiv_respingere = ? WHERE id = ? AND montator_id = ?',
+            ['respins', motiv, comanda_id, montator_id], (err, result) => {
+                if (err) return res.json({ error: err.message });
 
-        db.query('UPDATE comenzi SET status = "finalizata", semnatura = ? WHERE id = ?',
-            [semnatura, comanda_id], (err) => {
-                if (err) return res.json({ error: err });
-
-                db.query('UPDATE users SET salariu_total = salariu_total + ? WHERE id = ?',
-                    [suma, montator_id], (err) => {
-                        if (err) return res.json({ error: err });
-                        db.commit(() => res.json({ success: true }));
+                // Eliberează montatorul și pune comanda din nou în așteptare
+                db.query('UPDATE comenzi SET montator_id = NULL, status = "asteapta" WHERE id = ?',
+                    [comanda_id], (err) => {
+                        if (err) return res.json({ error: err.message });
+                        res.json({ success: true, message: 'Comanda respinsă!' });
                     });
             });
-    });
+    }
+});
+
+// ========== CLIENT - VEDEAZA CONFIRMAREA ==========
+app.get('/api/confirmare-comanda/:comandaId', (req, res) => {
+    db.query('SELECT confirmat_montator, data_confirmare, motiv_respingere FROM comenzi WHERE id = ?',
+        [req.params.comandaId], (err, results) => {
+            res.json(results[0] || {});
+        });
 });
 
 // ========== MONTATOR - SALARIU ==========

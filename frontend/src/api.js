@@ -64,3 +64,18 @@ export const getSalariu = async (montatorId) => {
     const res = await fetch(`${API}/salariu/${montatorId}`);
     return res.json();
 };
+// ========== MONTATOR - CONFIRMARE COMANDA ==========
+export const confirmaComanda = async (comanda_id, montator_id, confirmat, motiv = null) => {
+    const res = await fetch(`${API}/confirma-comanda`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comanda_id, montator_id, confirmat, motiv })
+    });
+    return res.json();
+};
+
+// ========== CLIENT - VERIFICARE CONFIRMARE ==========
+export const getConfirmareComanda = async (comandaId) => {
+    const res = await fetch(`${API}/confirmare-comanda/${comandaId}`);
+    return res.json();
+};
