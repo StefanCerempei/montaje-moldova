@@ -1,8 +1,8 @@
 Intrebarea 1 Ce are loc dupa publicarea comenzii de catre client?
-Solutia 1 : Ca in Yandex algoritmul automat ii da montatorului comanda ca el so accepte. Algoritmul ia in calcul: disponibilitatea montatorului (daca nu are programat la aceeasi
-ora inca o comanda deja); ratingul care il are si locatia care o are.
+Solutia 1 : Ca in Yandex algoritmul automat ii da montatorului comanda ca el so accepte. Algoritmul ia in calcul: disponibilitatea montatorului (daca nu are programat la aceeasi ora inca o comanda deja); ratingul care il are si locatia care o are.
 Solutia 2: Ca la Letz Taxi, automat se genereaza comenzile pe un dashboard si montatorii le aleg. Mai multi montatori pot alege aceasi comanda iar algoritmul ii ofera
 comanda celui cu rating mai mare.
+Solutia 3: ceva mixt sa fie dintre prima solutie si a doua.
 
 
 
